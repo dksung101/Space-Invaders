@@ -32,15 +32,31 @@ class Laser:
     
 class Alien:
     def __init__(self, x, y):
-        pass
+        self.x = x
+        self.y = y
+        self.r = 15
     
+    def drawAlien(self, canvas):
+        canvas.create_oval(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r)
+        
+# class GroupOfAliens:
+#     def __init__(self, listOfAliens):
+#         self.listOfAliens = listOfAliens
+        
+#     def 
+        
 def gameDimensions():
     pass
 
 def appStarted(app):
     app.mode = 'startScreenMode'
-    app.SpaceShip = SpaceShip(400, 400)
+    app.SpaceShip = SpaceShip(400, 780)
     app.Lasers = []
+    app.timerDelay = 10
+    app.groupOfAliens = []
+    for i in range(8):
+        for j in range(3):
+            app.groupOfAliens.append(Alien(50+100*i, 50+100*j))
     
     
 # def keyPressed(app, event):
@@ -70,17 +86,20 @@ def startScreenMode_keyPressed(app, event):
 # Game Mode
 ##########################################
 
-# def gameMode_appStarted(app):
-#     app.SpaceShip = SpaceShip(400, 400)
 
 def drawLasers(app, canvas):
     for laser in app.Lasers:
         laser.drawLaser(canvas)
+        
+def drawAliens(app, canvas):
+    for alien in app.groupOfAliens:
+        alien.drawAlien(canvas)
 
 def gameMode_redrawAll(app, canvas):
     canvas.create_text(20, 20, text = "YOO")
     app.SpaceShip.drawSpaceShip(canvas)
     drawLasers(app, canvas)
+    drawAliens(app, canvas)
     
 
 def gameMode_timerFired(app):
