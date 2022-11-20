@@ -8,26 +8,32 @@ class SpaceShip:
         self.x = x
         self.y = y 
         self.r = 10
+        self.movingRight = False
+        self.movingLeft = False
+        self.movingUp = False
+        self.movingDown = False
         
     def drawSpaceShip(self, canvas):
-        canvas.create_rectangle(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r, width = 3)
+        canvas.create_rectangle(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r, width = 3, fill = 'orange')
         
-    def moveSpaceShip(self, direction, app):
-        if direction == 'Right' and self.x <= app.width-50:
-            self.x+=20
-            print(self.x)
-        elif direction == 'Left' and self.x >= 50:
-            self.x-=20
+    def moveSpaceShip(self, app):
+        if self.movingRight == True and self.x <= app.width-50:
+            self.x+=7
+
+        if self.movingLeft == True and self.x >= 50:
+            self.x-=7
+            
+        if self.movingUp == True and self.y >= 50:
+            self.y-=7
+                
+        if self.movingDown == True and self.y <= app.height-50:
+            self.y+=7
     
 class Laser:
     def __init__(self, x, y):
         self.x = x
         self.y = y
         self.r = 10
-        
-    def drawLaser(self, canvas):
-        canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r)
-        
 
 class SpaceShipLaser(Laser):
     def __init__(self, x, y):
@@ -42,6 +48,17 @@ class SpaceShipLaser(Laser):
             return True
         else:
             return False
+    
+    def checkHitAlienLaser(self, alienLaser):
+        if (self.x >= alienLaser.x-alienLaser.r and self.x <= alienLaser.x+alienLaser.r 
+            and self.y >= alienLaser.y-alienLaser.r and self.y <= alienLaser.y+alienLaser.r):
+            return True
+        else:
+            return False
+        
+    def drawLaser(self, canvas):
+        canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill = 'blue')
+        
 
 class AlienLaser(Laser):
     def __init__(self, x, y):
@@ -56,6 +73,10 @@ class AlienLaser(Laser):
             return True
         else:
             return False
+        
+    def drawLaser(self, canvas):
+        canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill = 'red')
+        
     
 class Alien:
     def __init__(self, x, y):
@@ -65,7 +86,7 @@ class Alien:
         self.dir = "l"
     
     def drawAlien(self, canvas):
-        canvas.create_oval(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r)
+        canvas.create_oval(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r, fill = 'green')
         
     def moveAlienLeftandRight(self):
         if self.dir == "l":
@@ -94,13 +115,20 @@ def gameDimensions():
 
 def appStarted(app):
     app.mode = 'startScreenMode'
-    app.SpaceShip = SpaceShip(app.width//2, 780)
+    app.SpaceShip = SpaceShip(app.width//2, app.height-50)
     app.SpaceShipLasers = []
     app.timerDelay = 30
     app.groupOfAliens = []
     app.alienLasers = []
     app.totalTime = 0
     app.gameOver = False
+    app.image1 = app.loadImage('Images and Sprites/SpaceInvadersBG.jpg')
+    # Background image from: https://www.google.com/url?
+    # sa=i&url=http%3A%2F%2Fwww.csun.edu%2F~asn71882%2Fc
+    # hallenge09%2F&psig=AOvVaw33CnmOUxRPUhQIq1GM0w4s&ust
+    # =1669023233501000&source=images&cd=vfe&ved=0CA8QjRx
+    # qFwoTCIjW8Zi6vPsCFQAAAAAdAAAAABAJ
+    app.backGround = app.scaleImage(app.image1, 1)
     for i in range(8):
         for j in range(3):
             app.groupOfAliens.append(Alien(50+100*i, 50+100*j))
@@ -114,44 +142,116 @@ def appStarted(app):
 ##########################################
 
 def startScreenMode_redrawAll(app, canvas):
+    canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
     drawStartScreen(app, canvas)
     drawThreeButtons(app, canvas)
 
 
 def drawStartScreen(app, canvas):
     fontDirections = font.Font(family = 'Small Fonts', size = 20, weight = 'bold')
-    canvas.create_text(app.width//2, 50, text = "SPACE INVADERS!", font = fontDirections)
+    canvas.create_text(app.width//2, 50, text = "SPACE INVADERS!", font = fontDirections, fill = 'blue')
 
 def drawThreeButtons(app, canvas):
     fontDirections = font.Font(family = 'Small Fonts', size = 25, weight = 'bold')
 
     # Start Button
     canvas.create_rectangle(app.width//2-app.width*(1/4), app.height//4-app.height*(1/10), 
-                           app.width//2+app.width*(1/4), app.height//4+app.height*(1/10), outline = "black", width=3)
-    canvas.create_text(app.width//2, app.height//4, text = "START", font = fontDirections)
+                           app.width//2+app.width*(1/4), app.height//4+app.height*(1/10), outline = "blue", width=3)
+    canvas.create_text(app.width//2, app.height//4, text = "START", font = fontDirections, fill = 'blue')
     
     # Instructions Button
     canvas.create_rectangle(app.width//2-app.width*(1/4), app.height//2-app.height*(1/10), 
-                           app.width//2+app.width*(1/4), app.height//2+app.height*(1/10), outline = "black", width=3)
-    canvas.create_text(app.width//2, app.height//2, text = "INSTRUCTIONS", font = fontDirections)
+                           app.width//2+app.width*(1/4), app.height//2+app.height*(1/10), outline = "blue", width=3)
+    canvas.create_text(app.width//2, app.height//2, text = "INSTRUCTIONS", font = fontDirections, fill = 'blue')
 
     # LeaderBoard Button
     canvas.create_rectangle(app.width//2-app.width*(1/4), app.height*(3/4)-app.height*(1/10), 
-                           app.width//2+app.width*(1/4), app.height*(3/4)+app.height*(1/10), outline = "black", width=3)
-    canvas.create_text(app.width//2, app.height*(3/4), text = "LEADERBOARD", font = fontDirections)
+                           app.width//2+app.width*(1/4), app.height*(3/4)+app.height*(1/10), outline = "blue", width=3)
+    canvas.create_text(app.width//2, app.height*(3/4), text = "LEADERBOARD", font = fontDirections, fill = 'blue')
     
 def startScreenMode_timerFired(app):
     # print("startScreen!")
     pass
 
 def startScreenMode_mousePressed(app, event):
+    if (event.x >= app.width//2-app.width*(1/4) and event.x <=app.width//2+app.width*(1/4) 
+        and event.y >= app.height//4-app.height*(1/10) and event.y <= app.height//4+app.height*(1/10)):
+        app.mode = 'gameMode'
+    
+    elif (event.x >= app.width//2-app.width*(1/4) and event.x <=app.width//2+app.width*(1/4) 
+        and event.y >= app.height//2-app.height*(1/10) and event.y <= app.height//2+app.height*(1/10)):
+        app.mode = 'instructionMode'
+        
+    elif (event.x >= app.width//2-app.width*(1/4) and event.x <=app.width//2+app.width*(1/4) 
+        and event.y >= app.height*(3/4)-app.height*(1/10) and event.y <= app.height*(3/4)+app.height*(1/10)):
+        app.mode = 'leaderboardMode'
+
+# def startScreenMode_keyPressed(app, event):
+#     if (event.key == 'g'):
+#     elif (event.key == 'v'):
+#         app.makeAnMVCViolation = True
+
+
+
+##########################################
+# Instruction Mode
+##########################################
+
+def drawInstructionBoard(app, canvas):
+    fontDirectionsBackButton = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
+    fontDirectionsTitle = font.Font(family = 'Small Fonts', size = 25, weight = 'bold')
+
+    canvas.create_rectangle(app.width//2-app.width*(1/4), app.height//2-app.height*(1/5), 
+                           app.width//2+app.width*(1/4), app.height//2+app.height*(1/5), outline = "blue", width=3)
+    canvas.create_text(app.width//2, app.height//2, text = "CONTROLS", font = fontDirectionsTitle, fill = "blue")
+    
+    # Back Button (bottom left corner)
+    canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
+    canvas.create_text(app.width//10, app.height*(19/20), text = "BACK", font = fontDirectionsBackButton, fill = "blue")
+
+def instructionMode_redrawAll(app, canvas):
+    canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
+    drawInstructionBoard(app, canvas)
+
+def instructionMode_timerFired(app):
     pass
 
-def startScreenMode_keyPressed(app, event):
-    if (event.key == 'g'):
-        app.mode = 'gameMode'
-    elif (event.key == 'v'):
-        app.makeAnMVCViolation = True
+def instructionMode_mousePressed(app, event):
+    if (event.x >= app.width//10-30 and event.x <= app.width//10+30 
+        and event.y >= app.height*(19/20)-10 and event.y <= app.height*(19/20)+10):
+        app.mode = 'startScreenMode'
+    
+
+def instructionMode_keyPressed(app, event):
+    pass
+
+##########################################
+# Leaderboard Mode
+##########################################
+
+def drawleaderBoard(app, canvas):
+    fontDirectionsBackButton = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
+    fontDirectionsTitle = font.Font(family = 'Small Fonts', size = 25, weight = 'bold')
+    canvas.create_rectangle(app.width//2-app.width*(1/4), app.height//2-app.height*(1/3), 
+                           app.width//2+app.width*(1/4), app.height//2+app.height*(1/3), outline = "blue", width=3)
+    canvas.create_text(app.width//2, app.height//2-app.height*(1.1/3), text = "LEADERBOARD", font = fontDirectionsTitle, fill = "blue")
+    
+    # Back Button (bottom left corner)
+    canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
+    canvas.create_text(app.width//10, app.height*(19/20), text = "BACK", font = fontDirectionsBackButton, fill = "blue")
+
+def leaderboardMode_redrawAll(app, canvas):
+    canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
+    drawleaderBoard(app, canvas)
+
+def leaderboardMode_timerFired(app):
+    pass
+
+def leaderboardMode_mousePressed(app, event):
+    if (event.x >= app.width//10-30 and event.x <= app.width//10+30 
+        and event.y >= app.height*(19/20)-10 and event.y <= app.height*(19/20)+10):
+        app.mode = 'startScreenMode'
+    
 
 ##########################################
 # Game Mode
@@ -170,60 +270,112 @@ def drawAliens(app, canvas):
         alien.drawAlien(canvas)
 
 def gameMode_redrawAll(app, canvas):
-    canvas.create_text(20, 20, text = "YOO")
+    canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
     app.SpaceShip.drawSpaceShip(canvas)
     drawLasers(app, canvas)
     drawAliens(app, canvas)
     
+    # Back Button (bottom left corner)
+    fontDirectionsBackButton = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
+    canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
+    canvas.create_text(app.width//10, app.height*(19/20), text = "EXIT", font = fontDirectionsBackButton, fill = "blue")
 
+    
+def moveAliensAround(app):
+    for alien in app.groupOfAliens:
+        alien.moveAlienLeftandRight()
+        if alien.checkSide(app) == "l":
+            alien.dir = "r"
+            alien.moveAlienDown()
+        elif alien.checkSide(app) == "r":
+            alien.dir = "l"
+            alien.moveAlienDown()
+
+def moveAndCheckSpaceShipLaser(app):
+    for laser in app.SpaceShipLasers:
+        laser.moveLaser()
+        for alien in app.groupOfAliens:
+            if laser.checkHitAlien(alien):
+                app.groupOfAliens.remove(alien)
+                app.SpaceShipLasers.remove(laser)
+
+def removeCollidingLasers(app):
+    for laser in app.SpaceShipLasers:
+        for alienLaser in app.alienLasers:
+            if laser.checkHitAlienLaser(alienLaser):
+                app.SpaceShipLasers.remove(laser)
+                app.alienLasers.remove(alienLaser)
+             
+def checkGameOver(app):
+    for laser in app.alienLasers:
+        laser.moveLaser()
+        if laser.checkHitSpaceShip(app.SpaceShip):
+            # print("loss")
+            app.gameOver = True
+            
+def randomAlienShootLaser(app):
+    randomAlien = random.randint(0, len(app.groupOfAliens))
+    i=0
+    for alien in app.groupOfAliens:
+        if i == randomAlien:
+            app.alienLasers.append(AlienLaser(alien.x, alien.y))
+        i+=1
+    
 def gameMode_timerFired(app):
     # print("gameMode!")
     if app.gameOver == False:
         app.totalTime+=app.timerDelay
-        print(app.totalTime)
-        for alien in app.groupOfAliens:
-            alien.moveAlienLeftandRight()
-            if alien.checkSide(app) == "l":
-                alien.dir = "r"
-                alien.moveAlienDown()
-            elif alien.checkSide(app) == "r":
-                alien.dir = "l"
-                alien.moveAlienDown()
+        # print(app.totalTime)
+        
+        app.SpaceShip.moveSpaceShip(app)
+        
+        moveAliensAround(app)
+        
+        moveAndCheckSpaceShipLaser(app)
+        
+        removeCollidingLasers(app)
                 
-        for laser in app.SpaceShipLasers:
-            laser.moveLaser()
-            for alien in app.groupOfAliens:
-                if laser.checkHitAlien(alien):
-                    app.groupOfAliens.remove(alien)
-                    app.SpaceShipLasers.remove(laser)
-        for laser in app.alienLasers:
-            laser.moveLaser()
-            if laser.checkHitSpaceShip(app.SpaceShip):
-                print("loss")
-                app.gameOver = True
-                    
-        if app.totalTime%1000==0:
-            randomAlien = random.randint(0, 10)
-            i=0
-            for alien in app.groupOfAliens:
-                if i == randomAlien:
-                    app.alienLasers.append(AlienLaser(alien.x, alien.y))
-                i+=1
+        checkGameOver(app)
+                        
+        if app.totalTime%200==0:
+            randomAlienShootLaser(app)
         
 def gameMode_mousePressed(app, event):
-    pass
+    if (event.x >= app.width//10-30 and event.x <= app.width//10+30 
+    and event.y >= app.height*(19/20)-10 and event.y <= app.height*(19/20)+10):
+        app.mode = 'startScreenMode'
+
+
+
 
 def gameMode_keyPressed(app, event):
-    if (event.key == 'h'):
-        app.mode = 'startScreenMode'
-    if (event.key == 'Right' or event.key == 'Left'):
-        print(event.key)
-        print(app.SpaceShip.x)
-        app.SpaceShip.moveSpaceShip(event.key, app)
+    if (event.key == 'Right'):
+        app.SpaceShip.movingRight = True
+        
+    if (event.key == 'Left'):
+        app.SpaceShip.movingLeft = True
+        
+    if (event.key == 'Up'):
+        app.SpaceShip.movingUp = True
+        
+    if (event.key == 'Down'):
+        app.SpaceShip.movingDown = True
+        
     if (event.key == 'Space'):
         app.SpaceShipLasers.append(SpaceShipLaser(app.SpaceShip.x, app.SpaceShip.y))
     
-
+def gameMode_keyReleased(app, event):
+    if event.key == 'Right':
+        app.SpaceShip.movingRight = False
+    
+    if event.key == 'Left':
+        app.SpaceShip.movingLeft = False
+        
+    if (event.key == 'Up'):
+        app.SpaceShip.movingUp = False
+        
+    if (event.key == 'Down'):
+        app.SpaceShip.movingDown = False
 
 def playSpaceInvaders():
     width=800
