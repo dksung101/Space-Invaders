@@ -2,6 +2,7 @@ from cmu_112_graphics import *
 
 import math, copy, random
 from tkinter import font
+import time
 
 class SpaceShip:
     def __init__(self, x, y):
@@ -18,29 +19,32 @@ class SpaceShip:
         
     def moveSpaceShip(self, app):
         if self.movingRight == True and self.x <= app.width-50:
-            self.x+=7
+            self.x+=5
 
         if self.movingLeft == True and self.x >= 50:
-            self.x-=7
+            self.x-=5
             
         if self.movingUp == True and self.y >= 50:
-            self.y-=7
+            self.y-=5
                 
         if self.movingDown == True and self.y <= app.height-50:
-            self.y+=7
+            self.y+=5
     
 class Laser:
     def __init__(self, x, y):
         self.x = x
         self.y = y
         self.r = 10
+        # self.laserSpeed = laserSpeed
 
 class SpaceShipLaser(Laser):
     def __init__(self, x, y):
         super().__init__(x,y)
+        self.laserSpeed = 10
         
     def moveLaser(self):
-        self.y -= 5
+        print(self.laserSpeed)
+        self.y -= self.laserSpeed
         
     def checkHitAlien(self, alien):
         if (self.x >= alien.x-alien.r and self.x <= alien.x+alien.r 
@@ -58,14 +62,68 @@ class SpaceShipLaser(Laser):
         
     def drawLaser(self, canvas):
         canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill = 'blue')
+
+class Item:
+    def __init__(self, xPos, yPos):
+        self.xPos = xPos
+        self.yPos = yPos
+        self.r = 10
+        # self.typeOfItem = typeOfItem
         
+    def moveItemDown(self):
+        self.yPos += 5
+        
+    def checkHitSpaceShip(self, SpaceShip):
+        if (self.xPos >= SpaceShip.x-SpaceShip.r and self.xPos <= SpaceShip.x+SpaceShip.r 
+            and self.yPos >= SpaceShip.y-SpaceShip.r and self.yPos <= SpaceShip.y+SpaceShip.r):
+            return True
+        else:
+            return False
+    
+    # def drawItem(self, canvas):
+    #     print(self.typeOfItem, isinstance(self.typeOfItem, bulletSpeedDecrease))
+    #     if isinstance(self.typeOfItem, bulletSpeedIncrease):
+    #         canvas.create_oval(self.xPos-self.r, self.yPos-self.r, self.xPos+self.r, self.yPos+self.r, fill = "purple")
+    #     elif isinstance(self.typeOfItem, bulletSpeedDecrease):
+    #         canvas.create_oval(self.xPos-self.r, self.yPos-self.r, self.xPos+self.r, self.yPos+self.r, fill = "cyan")
+
+class bulletSpeedIncrease(Item):
+    def __init__(self, xPos, yPos):
+        super().__init__(xPos, yPos)
+    
+    def drawItem(self, canvas):
+        canvas.create_oval(self.xPos-self.r, self.yPos-self.r, self.xPos+self.r, self.yPos+self.r, fill = "purple")
+
+    def activatePower(self, app):
+        print("YUHs")
+        for laser in app.SpaceShipLasers:
+            laser.laserSpeed = 20
+            
+    def deactivatePower(self, app):
+        for laser in app.SpaceShipLasers:
+            laser.laserSpeed = 10
+    
+class bulletSpeedDecrease(Item):
+    def __init__(self, xPos, yPos):
+        super().__init__(xPos, yPos)
+        
+    def drawItem(self, canvas):
+        canvas.create_oval(self.xPos-self.r, self.yPos-self.r, self.xPos+self.r, self.yPos+self.r, fill = "cyan")
+
+    def activatePower(self, app):
+        for laser in app.SpaceShipLasers:
+            laser.laserSpeed = 5
+            
+    def deactivatePower(self, app):
+        for laser in app.SpaceShipLasers:
+            laser.laserSpeed = 10
 
 class AlienLaser(Laser):
     def __init__(self, x, y):
         super().__init__(x, y)
         
     def moveLaser(self):
-        self.y += 5
+        self.y += 10
     
     def checkHitSpaceShip(self, SpaceShip):
         if (self.x >= SpaceShip.x-SpaceShip.r and self.x <= SpaceShip.x+SpaceShip.r 
@@ -90,9 +148,9 @@ class Alien:
         
     def moveAlienLeftandRight(self):
         if self.dir == "l":
-            self.x -= 5
+            self.x -= 3
         elif self.dir == "r":
-            self.x += 5
+            self.x += 3
 
     def moveAlienDown(self):
         self.y += 50
@@ -104,12 +162,6 @@ class Alien:
             return "r"
         return "m"
         
-# class GroupOfAliens:
-#     def __init__(self, listOfAliens):
-#         self.listOfAliens = listOfAliens
-        
-#     def 
-        
 def gameDimensions():
     pass
 
@@ -117,10 +169,14 @@ def appStarted(app):
     app.mode = 'startScreenMode'
     app.SpaceShip = SpaceShip(app.width//2, app.height-50)
     app.SpaceShipLasers = []
-    app.timerDelay = 30
+    app.timerDelay = 10
     app.groupOfAliens = []
     app.alienLasers = []
+    app.items = []
+    app.itemActive = False
+    app.activeItem = None
     app.totalTime = 0
+    app.score = 0
     app.gameOver = False
     app.image1 = app.loadImage('Images and Sprites/SpaceInvadersBG.jpg')
     # Background image from: https://www.google.com/url?
@@ -257,6 +313,15 @@ def leaderboardMode_mousePressed(app, event):
 # Game Mode
 ##########################################
 
+def drawTimer(app, canvas):
+    totalTime = app.totalTime*4.34782//1000
+    # totalTime *= 4.34
+    print(totalTime)
+    canvas.create_text(app.width*(1/20), app.height*(1/30), text = f'Time: {totalTime}', fill = 'blue')
+    
+def drawScore(app, canvas):
+    canvas.create_text(app.width*(19/20), app.height*(1/30), text = f"Score: {app.score}", fill = 'blue')
+
 
 def drawLasers(app, canvas):
     for laser in app.SpaceShipLasers:
@@ -268,6 +333,11 @@ def drawLasers(app, canvas):
 def drawAliens(app, canvas):
     for alien in app.groupOfAliens:
         alien.drawAlien(canvas)
+        
+def drawItems(app, canvas):
+    for item in app.items:
+        item.drawItem(canvas)
+        
 
 def gameMode_redrawAll(app, canvas):
     canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
@@ -275,11 +345,15 @@ def gameMode_redrawAll(app, canvas):
     drawLasers(app, canvas)
     drawAliens(app, canvas)
     
+    drawItems(app, canvas)
+    
     # Back Button (bottom left corner)
     fontDirectionsBackButton = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
     canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
     canvas.create_text(app.width//10, app.height*(19/20), text = "EXIT", font = fontDirectionsBackButton, fill = "blue")
 
+    drawTimer(app, canvas)
+    drawScore(app, canvas)
     
 def moveAliensAround(app):
     for alien in app.groupOfAliens:
@@ -291,13 +365,28 @@ def moveAliensAround(app):
             alien.dir = "l"
             alien.moveAlienDown()
 
+def moveItemsDown(app):
+    for item in app.items:
+        item.moveItemDown()
+
 def moveAndCheckSpaceShipLaser(app):
     for laser in app.SpaceShipLasers:
+        print(laser.laserSpeed)
         laser.moveLaser()
         for alien in app.groupOfAliens:
             if laser.checkHitAlien(alien):
                 app.groupOfAliens.remove(alien)
                 app.SpaceShipLasers.remove(laser)
+                
+                if True:
+                    newItem = chooseRandItem(alien.x, alien.y)
+                    app.items.append(newItem)
+                    print(app.items)
+                
+def chooseRandItem(x, y):
+    typesOfItems = [bulletSpeedDecrease, bulletSpeedIncrease]
+    itemIndex = random.randint(0, len(typesOfItems)-1)
+    return typesOfItems[itemIndex](x, y, )
 
 def removeCollidingLasers(app):
     for laser in app.SpaceShipLasers:
@@ -305,7 +394,19 @@ def removeCollidingLasers(app):
             if laser.checkHitAlienLaser(alienLaser):
                 app.SpaceShipLasers.remove(laser)
                 app.alienLasers.remove(alienLaser)
-             
+
+def removeCollidingItems(app):
+    for item in app.items:
+        # item.deactivatePower(app)
+        if item.checkHitSpaceShip(app.SpaceShip):
+            app.items.remove(item)
+            app.activeItem = item
+            app.itemActive = True
+            
+def checkItemActive(app):
+    if app.itemActive == True:
+        app.activeItem.activatePower(app)
+
 def checkGameOver(app):
     for laser in app.alienLasers:
         laser.moveLaser()
@@ -314,7 +415,7 @@ def checkGameOver(app):
             app.gameOver = True
             
 def randomAlienShootLaser(app):
-    randomAlien = random.randint(0, len(app.groupOfAliens))
+    randomAlien = random.randint(0, len(app.groupOfAliens)-1)
     i=0
     for alien in app.groupOfAliens:
         if i == randomAlien:
@@ -325,7 +426,7 @@ def gameMode_timerFired(app):
     # print("gameMode!")
     if app.gameOver == False:
         app.totalTime+=app.timerDelay
-        # print(app.totalTime)
+    
         
         app.SpaceShip.moveSpaceShip(app)
         
@@ -333,8 +434,14 @@ def gameMode_timerFired(app):
         
         moveAndCheckSpaceShipLaser(app)
         
+        moveItemsDown(app)
+        
         removeCollidingLasers(app)
-                
+        
+        removeCollidingItems(app)
+            
+        checkItemActive(app)
+        
         checkGameOver(app)
                         
         if app.totalTime%200==0:
@@ -344,9 +451,6 @@ def gameMode_mousePressed(app, event):
     if (event.x >= app.width//10-30 and event.x <= app.width//10+30 
     and event.y >= app.height*(19/20)-10 and event.y <= app.height*(19/20)+10):
         app.mode = 'startScreenMode'
-
-
-
 
 def gameMode_keyPressed(app, event):
     if (event.key == 'Right'):
