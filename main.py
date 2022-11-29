@@ -80,13 +80,6 @@ class Item:
         else:
             return False
     
-    # def drawItem(self, canvas):
-    #     print(self.typeOfItem, isinstance(self.typeOfItem, bulletSpeedDecrease))
-    #     if isinstance(self.typeOfItem, bulletSpeedIncrease):
-    #         canvas.create_oval(self.xPos-self.r, self.yPos-self.r, self.xPos+self.r, self.yPos+self.r, fill = "purple")
-    #     elif isinstance(self.typeOfItem, bulletSpeedDecrease):
-    #         canvas.create_oval(self.xPos-self.r, self.yPos-self.r, self.xPos+self.r, self.yPos+self.r, fill = "cyan")
-
 class bulletSpeedIncrease(Item):
     def __init__(self, xPos, yPos):
         super().__init__(xPos, yPos)
@@ -167,6 +160,7 @@ def gameDimensions():
 
 def appStarted(app):
     app.mode = 'startScreenMode'
+    app.name = "dan"
     app.SpaceShip = SpaceShip(app.width//2, app.height-50)
     app.SpaceShipLasers = []
     app.timerDelay = 10
@@ -176,8 +170,11 @@ def appStarted(app):
     app.itemActive = False
     app.activeItem = None
     app.totalTime = 0
+    app.leaderBoardtext = open("leaderboard.txt", "r").read() #https://www.w3schools.com/python/python_file_open.asp //opening files
     app.score = 0
+    app.countDown = 3
     app.gameOver = False
+    app.stage = 1
     app.image1 = app.loadImage('Images and Sprites/SpaceInvadersBG.jpg')
     # Background image from: https://www.google.com/url?
     # sa=i&url=http%3A%2F%2Fwww.csun.edu%2F~asn71882%2Fc
@@ -204,7 +201,7 @@ def startScreenMode_redrawAll(app, canvas):
 
 
 def drawStartScreen(app, canvas):
-    fontDirections = font.Font(family = 'Small Fonts', size = 20, weight = 'bold')
+    fontDirections = font.Font(family = 'Small Fonts', size = 40, weight = 'bold')
     canvas.create_text(app.width//2, 50, text = "SPACE INVADERS!", font = fontDirections, fill = 'blue')
 
 def drawThreeButtons(app, canvas):
@@ -291,14 +288,34 @@ def drawleaderBoard(app, canvas):
     canvas.create_rectangle(app.width//2-app.width*(1/4), app.height//2-app.height*(1/3), 
                            app.width//2+app.width*(1/4), app.height//2+app.height*(1/3), outline = "blue", width=3)
     canvas.create_text(app.width//2, app.height//2-app.height*(1.1/3), text = "LEADERBOARD", font = fontDirectionsTitle, fill = "blue")
-    
+
     # Back Button (bottom left corner)
     canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
     canvas.create_text(app.width//10, app.height*(19/20), text = "BACK", font = fontDirectionsBackButton, fill = "blue")
 
+def createLeaderBoard(app, canvas):
+    fontDirections = font.Font(family = 'Small Fonts', size = 15, weight = 'bold')
+    newLeaderBoard = []
+    for pair in app.leaderBoardtext.split('\n'):
+        pairOfData = []
+        for data in pair.split(","):
+            pairOfData.append(data)
+        newLeaderBoard.append(pairOfData)
+    print("HERE", newLeaderBoard)
+    for i in range(0, 10):
+        if len(newLeaderBoard) > i:
+            canvas.create_text(app.width//2-app.width*(1/5), app.height-app.height*(77/100)+i*app.height*(2/33), 
+                               text = f"{i+1}.{newLeaderBoard[i][0]}: {newLeaderBoard[i][1]}", font = fontDirections, 
+                               fill = "blue", anchor = 'sw')  
+        else:
+            canvas.create_text(app.width//2-app.width*(1/5), app.height-app.height*(77/100)+i*app.height*(2/33), text = f"{i+1}.",
+                               font = fontDirections, fill = "blue", anchor = 'sw')  
+
+
 def leaderboardMode_redrawAll(app, canvas):
     canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
     drawleaderBoard(app, canvas)
+    createLeaderBoard(app, canvas)
 
 def leaderboardMode_timerFired(app):
     pass
@@ -308,19 +325,117 @@ def leaderboardMode_mousePressed(app, event):
         and event.y >= app.height*(19/20)-10 and event.y <= app.height*(19/20)+10):
         app.mode = 'startScreenMode'
     
+##########################################
+# GameOver Mode
+##########################################
+
+def drawgameOverScreen(app, canvas):
+    fontDirectionsBackButton = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
+    fontDirectionsTitle = font.Font(family = 'Small Fonts', size = 25, weight = 'bold')
+    canvas.create_text(app.width//2, app.height//2, text = f"GAME OVER! \nYour Score: {app.score}", font = fontDirectionsTitle, fill = "blue")
+    
+    # Back Button (bottom left corner)
+    canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
+    canvas.create_text(app.width//10, app.height*(19/20), text = "EXIT", font = fontDirectionsBackButton, fill = "blue")
+
+
+def gameOverMode_redrawAll(app, canvas):
+    canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
+    drawgameOverScreen(app, canvas)
+    
+    
+def gameOverMode_timerFired(app):
+    pass
+
+def updateLeaderBoard(app):
+    # f1 = open('leaderboard.txt', 'r')
+    # leaderboard = f1.read()
+    f = open('leaderboard.txt', 'r+')
+    index = 0
+    for pair in f.read().split("\n"):
+        print(index, pair)
+        if index<10 and app.score > 100:
+            f.write(f"{app.name}, {app.score}")
+            index+=1
+        else:
+            # f.write(f"{pair[index][0]}, {pair[index][1]}\n")
+            f.write(f"\nok, 200")
+
+    if index<10:
+        f.write(f"\n{app.name}, {app.score}")
+    # f1.close()
+    f.close()
+
+
+def gameOverMode_mousePressed(app, event):
+    if (event.x >= app.width//10-30 and event.x <= app.width//10+30 
+        and event.y >= app.height*(19/20)-10 and event.y <= app.height*(19/20)+10):
+        updateLeaderBoard(app)
+        appStarted(app)
+        app.mode = 'startScreenMode'
+    
+##########################################
+# StageScreen Mode
+##########################################
+
+def drawstageScreen(app, canvas):
+    fontDirectionsBackButton = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
+
+    # Back Button (bottom left corner)
+    canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
+    canvas.create_text(app.width//10, app.height*(19/20), text = "EXIT", font = fontDirectionsBackButton, fill = "blue")
+    
+
+def stageScreenMode_redrawAll(app, canvas):
+    canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
+    drawstageScreen(app, canvas)
+
+    fontDirectionsTitle = font.Font(family = 'Small Fonts', size = 25, weight = 'bold')
+    canvas.create_text(app.width//2, app.height//2, 
+                       text = f"Next Stage: {app.stage} \n Starting in {app.countDown}... \n Current Score: {app.score}", 
+                       font = fontDirectionsTitle, fill = "blue")
+
+    
+def stageScreenMode_timerFired(app):
+    app.countDown-=1
+    time.sleep(1)
+    if app.countDown == 0:
+        tmpStage = app.stage
+        tmpScore = app.score
+        appStarted(app)
+        app.stage = tmpStage
+        app.score = tmpScore
+        app.mode = "gameMode"
+
+
+def stageScreenMode_mousePressed(app, event):
+    if (event.x >= app.width//10-30 and event.x <= app.width//10+30 
+        and event.y >= app.height*(19/20)-10 and event.y <= app.height*(19/20)+10):
+        app.mode = 'startScreenMode'
+        tmpStage = app.stage
+        appStarted(app)
+        app.stage = tmpStage
+        
 
 ##########################################
 # Game Mode
 ##########################################
 
 def drawTimer(app, canvas):
+    fontDirections = font.Font(family = 'Small Fonts', size = 20, weight = 'bold')
+
     totalTime = app.totalTime*4.34782//1000
     # totalTime *= 4.34
     print(totalTime)
-    canvas.create_text(app.width*(1/20), app.height*(1/30), text = f'Time: {totalTime}', fill = 'blue')
+    canvas.create_text(app.width*(2/20), app.height*(1/30), text = f'Time: {totalTime}s', font = fontDirections, fill = 'blue')
     
 def drawScore(app, canvas):
-    canvas.create_text(app.width*(19/20), app.height*(1/30), text = f"Score: {app.score}", fill = 'blue')
+    fontDirections = font.Font(family = 'Small Fonts', size = 20, weight = 'bold')
+    canvas.create_text(app.width*(18/20), app.height*(1/30), text = f"Score: {app.score}", font = fontDirections, fill = 'blue')
+
+def drawStage(app, canvas):
+    fontDirections = font.Font(family = 'Small Fonts', size = 20, weight = 'bold')
+    canvas.create_text(app.width//2, app.height*(1/30), text = f"Stage {app.stage}", font = fontDirections, fill = 'blue')
 
 
 def drawLasers(app, canvas):
@@ -351,7 +466,8 @@ def gameMode_redrawAll(app, canvas):
     fontDirectionsBackButton = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
     canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
     canvas.create_text(app.width//10, app.height*(19/20), text = "EXIT", font = fontDirectionsBackButton, fill = "blue")
-
+    
+    drawStage(app, canvas)
     drawTimer(app, canvas)
     drawScore(app, canvas)
     
@@ -377,6 +493,7 @@ def moveAndCheckSpaceShipLaser(app):
             if laser.checkHitAlien(alien):
                 app.groupOfAliens.remove(alien)
                 app.SpaceShipLasers.remove(laser)
+                app.score += 10*app.stage
                 
                 if True:
                     newItem = chooseRandItem(alien.x, alien.y)
@@ -407,13 +524,17 @@ def checkItemActive(app):
     if app.itemActive == True:
         app.activeItem.activatePower(app)
 
-def checkGameOver(app):
+def checkGameOverorNextStage(app):
     for laser in app.alienLasers:
         laser.moveLaser()
         if laser.checkHitSpaceShip(app.SpaceShip):
             # print("loss")
             app.gameOver = True
-            
+        
+    if len(app.groupOfAliens) == 22:
+        app.stage += 1
+        app.mode = "stageScreenMode"
+        
 def randomAlienShootLaser(app):
     randomAlien = random.randint(0, len(app.groupOfAliens)-1)
     i=0
@@ -442,10 +563,13 @@ def gameMode_timerFired(app):
             
         checkItemActive(app)
         
-        checkGameOver(app)
+        checkGameOverorNextStage(app)
                         
         if app.totalTime%200==0:
             randomAlienShootLaser(app)
+    
+    elif app.gameOver == True:
+        app.mode = "gameOverMode"
         
 def gameMode_mousePressed(app, event):
     if (event.x >= app.width//10-30 and event.x <= app.width//10+30 
