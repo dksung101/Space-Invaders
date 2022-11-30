@@ -3,158 +3,8 @@ from cmu_112_graphics import *
 import math, copy, random
 from tkinter import font
 import time
+from classes import *
 
-class SpaceShip:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y 
-        self.r = 10
-        self.movingRight = False
-        self.movingLeft = False
-        self.movingUp = False
-        self.movingDown = False
-        
-    def drawSpaceShip(self, canvas):
-        canvas.create_rectangle(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r, width = 3, fill = 'orange')
-        
-    def moveSpaceShip(self, app):
-        if self.movingRight == True and self.x <= app.width-50:
-            self.x+=5
-
-        if self.movingLeft == True and self.x >= 50:
-            self.x-=5
-            
-        if self.movingUp == True and self.y >= 50:
-            self.y-=5
-                
-        if self.movingDown == True and self.y <= app.height-50:
-            self.y+=5
-    
-class Laser:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.r = 10
-        # self.laserSpeed = laserSpeed
-
-class SpaceShipLaser(Laser):
-    def __init__(self, x, y):
-        super().__init__(x,y)
-        self.laserSpeed = 10
-        
-    def moveLaser(self):
-        print(self.laserSpeed)
-        self.y -= self.laserSpeed
-        
-    def checkHitAlien(self, alien):
-        if (self.x >= alien.x-alien.r and self.x <= alien.x+alien.r 
-            and self.y >= alien.y-alien.r and self.y <= alien.y+alien.r):
-            return True
-        else:
-            return False
-    
-    def checkHitAlienLaser(self, alienLaser):
-        if (self.x >= alienLaser.x-alienLaser.r and self.x <= alienLaser.x+alienLaser.r 
-            and self.y >= alienLaser.y-alienLaser.r and self.y <= alienLaser.y+alienLaser.r):
-            return True
-        else:
-            return False
-        
-    def drawLaser(self, canvas):
-        canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill = 'blue')
-
-class Item:
-    def __init__(self, xPos, yPos):
-        self.xPos = xPos
-        self.yPos = yPos
-        self.r = 10
-        # self.typeOfItem = typeOfItem
-        
-    def moveItemDown(self):
-        self.yPos += 5
-        
-    def checkHitSpaceShip(self, SpaceShip):
-        if (self.xPos >= SpaceShip.x-SpaceShip.r and self.xPos <= SpaceShip.x+SpaceShip.r 
-            and self.yPos >= SpaceShip.y-SpaceShip.r and self.yPos <= SpaceShip.y+SpaceShip.r):
-            return True
-        else:
-            return False
-    
-class bulletSpeedIncrease(Item):
-    def __init__(self, xPos, yPos):
-        super().__init__(xPos, yPos)
-    
-    def drawItem(self, canvas):
-        canvas.create_oval(self.xPos-self.r, self.yPos-self.r, self.xPos+self.r, self.yPos+self.r, fill = "purple")
-
-    def activatePower(self, app):
-        print("YUHs")
-        for laser in app.SpaceShipLasers:
-            laser.laserSpeed = 20
-            
-    def deactivatePower(self, app):
-        for laser in app.SpaceShipLasers:
-            laser.laserSpeed = 10
-    
-class bulletSpeedDecrease(Item):
-    def __init__(self, xPos, yPos):
-        super().__init__(xPos, yPos)
-        
-    def drawItem(self, canvas):
-        canvas.create_oval(self.xPos-self.r, self.yPos-self.r, self.xPos+self.r, self.yPos+self.r, fill = "cyan")
-
-    def activatePower(self, app):
-        for laser in app.SpaceShipLasers:
-            laser.laserSpeed = 5
-            
-    def deactivatePower(self, app):
-        for laser in app.SpaceShipLasers:
-            laser.laserSpeed = 10
-
-class AlienLaser(Laser):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        
-    def moveLaser(self):
-        self.y += 10
-    
-    def checkHitSpaceShip(self, SpaceShip):
-        if (self.x >= SpaceShip.x-SpaceShip.r and self.x <= SpaceShip.x+SpaceShip.r 
-            and self.y >= SpaceShip.y-SpaceShip.r and self.y <= SpaceShip.y+SpaceShip.r):
-            return True
-        else:
-            return False
-        
-    def drawLaser(self, canvas):
-        canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill = 'red')
-        
-    
-class Alien:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.r = 15
-        self.dir = "l"
-    
-    def drawAlien(self, canvas):
-        canvas.create_oval(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r, fill = 'green')
-        
-    def moveAlienLeftandRight(self):
-        if self.dir == "l":
-            self.x -= 3
-        elif self.dir == "r":
-            self.x += 3
-
-    def moveAlienDown(self):
-        self.y += 50
-            
-    def checkSide(self, app):
-        if self.x <= 40:
-            return "l"
-        elif self.x >= app.width - 40:
-            return "r"
-        return "m"
-        
 def gameDimensions():
     pass
 
@@ -229,6 +79,7 @@ def startScreenMode_timerFired(app):
 def startScreenMode_mousePressed(app, event):
     if (event.x >= app.width//2-app.width*(1/4) and event.x <=app.width//2+app.width*(1/4) 
         and event.y >= app.height//4-app.height*(1/10) and event.y <= app.height//4+app.height*(1/10)):
+        app.name = app.getUserInput("What is your name?: ")
         app.mode = 'gameMode'
     
     elif (event.x >= app.width//2-app.width*(1/4) and event.x <=app.width//2+app.width*(1/4) 
@@ -238,13 +89,6 @@ def startScreenMode_mousePressed(app, event):
     elif (event.x >= app.width//2-app.width*(1/4) and event.x <=app.width//2+app.width*(1/4) 
         and event.y >= app.height*(3/4)-app.height*(1/10) and event.y <= app.height*(3/4)+app.height*(1/10)):
         app.mode = 'leaderboardMode'
-
-# def startScreenMode_keyPressed(app, event):
-#     if (event.key == 'g'):
-#     elif (event.key == 'v'):
-#         app.makeAnMVCViolation = True
-
-
 
 ##########################################
 # Instruction Mode
@@ -301,7 +145,7 @@ def createLeaderBoard(app, canvas):
         for data in pair.split(","):
             pairOfData.append(data)
         newLeaderBoard.append(pairOfData)
-    print("HERE", newLeaderBoard)
+    # print("HERE", newLeaderBoard)
     for i in range(0, 10):
         if len(newLeaderBoard) > i:
             canvas.create_text(app.width//2-app.width*(1/5), app.height-app.height*(77/100)+i*app.height*(2/33), 
@@ -348,23 +192,37 @@ def gameOverMode_timerFired(app):
     pass
 
 def updateLeaderBoard(app):
-    # f1 = open('leaderboard.txt', 'r')
-    # leaderboard = f1.read()
-    f = open('leaderboard.txt', 'r+')
-    index = 0
-    for pair in f.read().split("\n"):
-        print(index, pair)
-        if index<10 and app.score > 100:
-            f.write(f"{app.name}, {app.score}")
-            index+=1
-        else:
-            # f.write(f"{pair[index][0]}, {pair[index][1]}\n")
-            f.write(f"\nok, 200")
-
-    if index<10:
-        f.write(f"\n{app.name}, {app.score}")
-    # f1.close()
+    f1 = open('leaderboard.txt', 'r')
+    leaderboard = f1.read()
+    f = open('leaderboardtmp.txt', 'w')
+    i=0
+    leaderList = []
+    for line in leaderboard.split("\n"):
+        newList = []
+        for data in line.split(","):
+            newList.append(data)
+        leaderList.append(newList)
+    # print(leaderList)
+    l=len(leaderList)
+    while app.score < int(leaderList[i][1]):
+        f.write(f"{leaderList[i][0]},{leaderList[i][1]}\n")
+        i+=1
+    f.write(f"{app.name},{app.score}\n")
+    for j in range(i, l-1):
+        f.write(f"{leaderList[j][0]},{leaderList[j][1]}\n")
+    f.write(f"{leaderList[l-1][0]},{leaderList[l-1][1]}")   
+    
+    f1.close()
     f.close()
+    
+    #https://www.geeksforgeeks.org/python-copy-contents-of-one-file-to-another-file/
+    with open("leaderboardtmp.txt", "r") as f, open("leaderboard.txt", 'w') as f1: 
+        for line in f:
+            f1.write(line)
+    
+    f.close()
+    f1.close()
+   
 
 
 def gameOverMode_mousePressed(app, event):
@@ -402,9 +260,11 @@ def stageScreenMode_timerFired(app):
     if app.countDown == 0:
         tmpStage = app.stage
         tmpScore = app.score
+        tmpName = app.name
         appStarted(app)
         app.stage = tmpStage
         app.score = tmpScore
+        app.name = tmpName
         app.mode = "gameMode"
 
 
@@ -426,7 +286,7 @@ def drawTimer(app, canvas):
 
     totalTime = app.totalTime*4.34782//1000
     # totalTime *= 4.34
-    print(totalTime)
+    # print(totalTime)
     canvas.create_text(app.width*(2/20), app.height*(1/30), text = f'Time: {totalTime}s', font = fontDirections, fill = 'blue')
     
 def drawScore(app, canvas):
@@ -487,7 +347,7 @@ def moveItemsDown(app):
 
 def moveAndCheckSpaceShipLaser(app):
     for laser in app.SpaceShipLasers:
-        print(laser.laserSpeed)
+        # print(laser.laserSpeed)
         laser.moveLaser()
         for alien in app.groupOfAliens:
             if laser.checkHitAlien(alien):
@@ -498,7 +358,7 @@ def moveAndCheckSpaceShipLaser(app):
                 if True:
                     newItem = chooseRandItem(alien.x, alien.y)
                     app.items.append(newItem)
-                    print(app.items)
+                    # print(app.items)
                 
 def chooseRandItem(x, y):
     typesOfItems = [bulletSpeedDecrease, bulletSpeedIncrease]
