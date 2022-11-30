@@ -1,4 +1,8 @@
 daniel,2000
+jeff,250
+dan,120
 nidsf,10
+daa,0
+ieal,0
 jdsif,0
 dne,0

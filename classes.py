@@ -39,20 +39,25 @@ class SpaceShipLaser(Laser):
     def moveLaser(self):
         # print(self.laserSpeed)
         self.y -= self.laserSpeed
-        
+    
+    
     def checkHitAlien(self, alien):
-        if (self.x >= alien.x-alien.r and self.x <= alien.x+alien.r 
-            and self.y >= alien.y-alien.r and self.y <= alien.y+alien.r):
+        if (self.x-alien.x)**2+(self.y-alien.y)**2 < (self.r+alien.r)**2:
             return True
-        else:
-            return False
+        return False
+        # if (self.x >= alien.x-alien.r and self.x <= alien.x+alien.r 
+        #     and self.y >= alien.y-alien.r and self.y <= alien.y+alien.r):
+        #     return True
+        # else:
+        #     return False
     
     def checkHitAlienLaser(self, alienLaser):
-        if (self.x >= alienLaser.x-alienLaser.r and self.x <= alienLaser.x+alienLaser.r 
-            and self.y >= alienLaser.y-alienLaser.r and self.y <= alienLaser.y+alienLaser.r):
+        if (self.x-alienLaser.x)**2+(self.y-alienLaser.y)**2 < (self.r+alienLaser.r)**2:
             return True
-        else:
-            return False
+        # if (self.x >= alienLaser.x-alienLaser.r and self.x <= alienLaser.x+alienLaser.r 
+        #     and self.y >= alienLaser.y-alienLaser.r and self.y <= alienLaser.y+alienLaser.r):
+        #     return True
+        return False
         
     def drawLaser(self, canvas):
         canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill = 'blue')
@@ -68,11 +73,12 @@ class Item:
         self.yPos += 5
         
     def checkHitSpaceShip(self, SpaceShip):
-        if (self.xPos >= SpaceShip.x-SpaceShip.r and self.xPos <= SpaceShip.x+SpaceShip.r 
-            and self.yPos >= SpaceShip.y-SpaceShip.r and self.yPos <= SpaceShip.y+SpaceShip.r):
+        if (self.xPos - SpaceShip.x)**2 + (self.yPos - SpaceShip.y)**2 < (self.r + SpaceShip.r)**2:
+        # if (self.xPos >= SpaceShip.x-SpaceShip.r and self.xPos <= SpaceShip.x+SpaceShip.r 
+        #     and self.yPos >= SpaceShip.y-SpaceShip.r and self.yPos <= SpaceShip.y+SpaceShip.r):
+        #     return True
             return True
-        else:
-            return False
+        return False
     
 class bulletSpeedIncrease(Item):
     def __init__(self, xPos, yPos):
@@ -113,11 +119,12 @@ class AlienLaser(Laser):
         self.y += 10
     
     def checkHitSpaceShip(self, SpaceShip):
+        # if (SpaceShip.x - self.x)**2 + (SpaceShip.y - self.y)**2 < (SpaceShip.r + self.r)**2:
+        #     return True
         if (self.x >= SpaceShip.x-SpaceShip.r and self.x <= SpaceShip.x+SpaceShip.r 
             and self.y >= SpaceShip.y-SpaceShip.r and self.y <= SpaceShip.y+SpaceShip.r):
             return True
-        else:
-            return False
+        return False
         
     def drawLaser(self, canvas):
         canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill = 'red')

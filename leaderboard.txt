@@ -1,4 +1,2 @@
 daniel,2000
-nidsf,10
-jdsif,0
-dne,0
+bob,1000
