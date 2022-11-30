@@ -202,15 +202,21 @@ def updateLeaderBoard(app):
         for data in line.split(","):
             newList.append(data)
         leaderList.append(newList)
-    # print(leaderList)
     l=len(leaderList)
-    while app.score < int(leaderList[i][1]):
+    while i<l and app.score < int(leaderList[i][1]):
+        print(leaderList, i)
         f.write(f"{leaderList[i][0]},{leaderList[i][1]}\n")
         i+=1
-    f.write(f"{app.name},{app.score}\n")
+    if i == l:
+        f.write(f"{app.name},{app.score}")
+    else:
+        f.write(f"{app.name},{app.score}\n")
     for j in range(i, l-1):
+        print(j)
         f.write(f"{leaderList[j][0]},{leaderList[j][1]}\n")
-    f.write(f"{leaderList[l-1][0]},{leaderList[l-1][1]}")   
+    
+    if i != l:
+        f.write(f"{leaderList[l-1][0]},{leaderList[l-1][1]}")   
     
     f1.close()
     f.close()
@@ -425,7 +431,7 @@ def gameMode_timerFired(app):
         
         checkGameOverorNextStage(app)
                         
-        if app.totalTime%200==0:
+        if app.totalTime%(200//app.stage)>=0 and app.totalTime%(200//app.stage)<10:
             randomAlienShootLaser(app)
     
     elif app.gameOver == True:
