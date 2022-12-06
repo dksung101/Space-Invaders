@@ -12,9 +12,12 @@ def appStarted(app):
     app.mode = 'startScreenMode'
     app.name = "dan"
     app.SpaceShip = SpaceShip(app.width//2, app.height-50)
+    app.Planet = Planet(random.randint(200, 600), random.randint(650, 700))
     app.SpaceShipLasers = []
     app.timerDelay = 10
     app.groupOfAliens = []
+    app.purpleAlienMovement = [random.randint(4,7), random.randint(4, 7)]
+    app.greenAlienMovement = [random.randint(4, 8), random.randint(4, 8)]
     app.alienLasers = []
     app.items = []
     app.itemActive = False
@@ -34,7 +37,12 @@ def appStarted(app):
     app.backGround = app.scaleImage(app.image1, 1)
     for i in range(8):
         for j in range(3):
-            app.groupOfAliens.append(Alien(50+100*i, 50+100*j))
+            typeOfAlien = random.randint(0, 1)
+            if typeOfAlien == 0:
+                app.groupOfAliens.append(greenAlien(50+100*i, 50+100*j, app.greenAlienMovement[0], app.greenAlienMovement[1]))
+            elif typeOfAlien == 1:
+                app.groupOfAliens.append(purpleAlien(50+100*i, 50+100*j, app.purpleAlienMovement[0], app.purpleAlienMovement[1]))
+
     
     
 # def keyPressed(app, event):
@@ -97,11 +105,39 @@ def startScreenMode_mousePressed(app, event):
 def drawInstructionBoard(app, canvas):
     fontDirectionsBackButton = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
     fontDirectionsTitle = font.Font(family = 'Small Fonts', size = 25, weight = 'bold')
+    fontDirectionsTitle1 = font.Font(family = 'Small Fonts', size = 50, weight = 'bold')
+    fontDirections = font.Font(family = 'Small Fonts', size = 18, weight = 'bold')
+    fontDirections1 = font.Font(family = 'Small Fonts', size = 13, weight = 'bold')
 
-    canvas.create_rectangle(app.width//2-app.width*(1/4), app.height//2-app.height*(1/5), 
-                           app.width//2+app.width*(1/4), app.height//2+app.height*(1/5), outline = "blue", width=3)
-    canvas.create_text(app.width//2, app.height//2, text = "CONTROLS", font = fontDirectionsTitle, fill = "blue")
+    canvas.create_text(app.width/2, app.height//8, text = "How-To-Play", font = fontDirectionsTitle1, fill = "blue")
+    canvas.create_rectangle(app.width//2-app.width*(1/3), app.height//2-app.height*(1/5), 
+                           app.width//2+app.width*(1/3), app.height/1.95, outline = "blue", width=3)
+    canvas.create_text(app.width//2, app.height//4, text = "CONTROLS", font = fontDirectionsTitle, fill = "blue")
     
+    canvas.create_text(app.width/5, app.height//2, 
+                       text = "1. Use Arrow Keys to move SpaceShip:\nUp, Down, Left, or Right.\n\n2. Use SPACE Key to shoot\nlasers at Alien Enemies", 
+                       font = fontDirections, fill = "blue", anchor = "sw")
+    
+    canvas.create_text(app.width/5, app.height/1.75, 
+                       text = "Goal of the Game:", 
+                       font = fontDirections, fill = "blue", anchor = "sw")
+    
+    canvas.create_rectangle(app.width//2-app.width*(1/3), app.height/1.7,
+                            app.width//2+app.width*(1/3), app.height/1.1, outline = "blue", width=3)
+    canvas.create_text(app.width/2.3, app.height/1.35, 
+                       text = '''
+                       The Goal of the game is to survive the longest and score the 
+                       highest. Each Stage you will face 24 random aliens: 
+                       green or purple, which have different movement patterns. 
+                       Kill all of the enemies to progress to the next stage! 
+                       At later stages, the enemies will begin to shoot faster.
+                       Collect Items that can speed up your bullets, but watch out 
+                       for the item that slows them down and can kill you.
+                       Watch out for the Red Planet that will interfere with 
+                       your SpaceShip's movement! 
+                        ''', 
+                       font = fontDirections1, fill = "blue")
+    # canvas.create_text(app.width/3.8, app.height//2, text = "Use SPACE Key to shoot\nlasers at Alien Enemies")
     # Back Button (bottom left corner)
     canvas.create_rectangle(app.width//10-30, app.height*(19/20)-10, app.width//10+30, app.height*(19/20)+10, outline = "blue")
     canvas.create_text(app.width//10, app.height*(19/20), text = "BACK", font = fontDirectionsBackButton, fill = "blue")
@@ -204,7 +240,6 @@ def updateLeaderBoard(app):
         leaderList.append(newList)
     l=len(leaderList)
     while i<l and app.score < int(leaderList[i][1]):
-        print(leaderList, i)
         f.write(f"{leaderList[i][0]},{leaderList[i][1]}\n")
         i+=1
     if i == l:
@@ -212,7 +247,6 @@ def updateLeaderBoard(app):
     else:
         f.write(f"{app.name},{app.score}\n")
     for j in range(i, l-1):
-        print(j)
         f.write(f"{leaderList[j][0]},{leaderList[j][1]}\n")
     
     if i != l:
@@ -322,10 +356,11 @@ def drawItems(app, canvas):
 
 def gameMode_redrawAll(app, canvas):
     canvas.create_image(app.width//2, app.height//2, image=ImageTk.PhotoImage(app.backGround))
+    app.Planet.drawPlanet(canvas)
+
     app.SpaceShip.drawSpaceShip(canvas)
     drawLasers(app, canvas)
     drawAliens(app, canvas)
-    
     drawItems(app, canvas)
     
     # Back Button (bottom left corner)
@@ -339,14 +374,18 @@ def gameMode_redrawAll(app, canvas):
     
 def moveAliensAround(app):
     for alien in app.groupOfAliens:
-        alien.moveAlienLeftandRight()
-        if alien.checkSide(app) == "l":
-            alien.dir = "r"
-            alien.moveAlienDown()
-        elif alien.checkSide(app) == "r":
-            alien.dir = "l"
-            alien.moveAlienDown()
-
+        alien.moveAlienDiagonal()
+        if alien.checkSide(app) == "l" or alien.checkSide(app) == "r":
+            alien.changeDirection("l")
+        
+        if app.totalTime % 100 == 0:
+            if app.totalTime%1000<600:
+                alien.changeDirection("u")
+                # print(app.totalTime%1000)
+            elif app.totalTime%1000>=600 and alien.movementY < 0:
+                alien.movementY*=-1
+                # print("BRUH", alien.movementY)
+                
 def moveItemsDown(app):
     for item in app.items:
         item.moveItemDown()
@@ -360,7 +399,8 @@ def moveAndCheckSpaceShipLaser(app):
                 app.groupOfAliens.remove(alien)
                 app.SpaceShipLasers.remove(laser)
                 app.score += 10*app.stage
-                
+                # chanceOfItem = random.randint(0, 3)
+                # if chanceOfItem == 0:
                 if True:
                     newItem = chooseRandItem(alien.x, alien.y)
                     app.items.append(newItem)
@@ -369,7 +409,7 @@ def moveAndCheckSpaceShipLaser(app):
 def chooseRandItem(x, y):
     typesOfItems = [bulletSpeedDecrease, bulletSpeedIncrease]
     itemIndex = random.randint(0, len(typesOfItems)-1)
-    return typesOfItems[itemIndex](x, y, )
+    return typesOfItems[itemIndex](x, y)
 
 def removeCollidingLasers(app):
     for laser in app.SpaceShipLasers:
@@ -388,7 +428,19 @@ def removeCollidingItems(app):
             
 def checkItemActive(app):
     if app.itemActive == True:
-        app.activeItem.activatePower(app)
+        if isinstance(app.activeItem, bulletSpeedIncrease):
+            app.activeItem.activatePower(app)
+            if app.totalTime%100 == 0:
+                for laser in app.SpaceShipLasers:
+                    laser.laserVel *= laser.laserAcc
+                    laser.laserSpeed += laser.laserVel
+
+        if isinstance(app.activeItem, bulletSpeedDecrease):
+            app.activeItem.activatePower(app)
+            if app.totalTime%100 == 0:
+                for laser in app.SpaceShipLasers:
+                    laser.laserVel *= laser.laserAcc
+                    laser.laserSpeed += laser.laserVel*(-1)
 
 def checkGameOverorNextStage(app):
     for laser in app.alienLasers:
@@ -397,7 +449,18 @@ def checkGameOverorNextStage(app):
             # print("loss")
             app.gameOver = True
         
-    if len(app.groupOfAliens) == 22:
+    for laser in app.SpaceShipLasers:
+        if app.SpaceShip.checkFriendlyFire(laser):
+            app.gameOver = True
+    
+    for alien in app.groupOfAliens:
+        if app.SpaceShip.checkHitAlien(alien):
+            app.gameOver = True
+    
+        if alien.y >= app.height:
+            app.gameOver = True
+    
+    if len(app.groupOfAliens) == 20:
         app.stage += 1
         app.mode = "stageScreenMode"
         
@@ -413,7 +476,6 @@ def gameMode_timerFired(app):
     # print("gameMode!")
     if app.gameOver == False:
         app.totalTime+=app.timerDelay
-    
         
         app.SpaceShip.moveSpaceShip(app)
         
@@ -430,7 +492,14 @@ def gameMode_timerFired(app):
         checkItemActive(app)
         
         checkGameOverorNextStage(app)
-                        
+        
+        if app.SpaceShip.SpaceShipNearPlanet(app.Planet):
+            # if app.totalTime%100 == 0:
+                
+            app.SpaceShip.moveTowardsPlanet(app.Planet)
+        # if app.SpaceShip.SpaceShipNearPlanet(app.Planet) == False:
+            
+        
         if app.totalTime%(200//app.stage)>=0 and app.totalTime%(200//app.stage)<10:
             randomAlienShootLaser(app)
     
@@ -456,8 +525,8 @@ def gameMode_keyPressed(app, event):
         app.SpaceShip.movingDown = True
         
     if (event.key == 'Space'):
-        app.SpaceShipLasers.append(SpaceShipLaser(app.SpaceShip.x, app.SpaceShip.y))
-    
+        app.SpaceShipLasers.append(SpaceShipLaser(app.SpaceShip.x, app.SpaceShip.y-app.SpaceShip.r-10))
+        
 def gameMode_keyReleased(app, event):
     if event.key == 'Right':
         app.SpaceShip.movingRight = False
@@ -470,7 +539,7 @@ def gameMode_keyReleased(app, event):
         
     if (event.key == 'Down'):
         app.SpaceShip.movingDown = False
-
+    
 def playSpaceInvaders():
     width=800
     height=800

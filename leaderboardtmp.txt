@@ -1,6 +1,6 @@
 daniel,2000
 da,1320
 bob,1000
-erjin,40
-cxbx,10
-qwer,0
+daniel,100
+sdf,0
+wer,0
