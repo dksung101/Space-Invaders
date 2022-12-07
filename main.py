@@ -397,7 +397,8 @@ def moveAndCheckSpaceShipLaser(app):
         for alien in app.groupOfAliens:
             if laser.checkHitAlien(alien):
                 app.groupOfAliens.remove(alien)
-                app.SpaceShipLasers.remove(laser)
+                if len(app.SpaceShipLasers)!=0:
+                    app.SpaceShipLasers.remove(laser)
                 app.score += 10*app.stage
                 # chanceOfItem = random.randint(0, 3)
                 # if chanceOfItem == 0:
